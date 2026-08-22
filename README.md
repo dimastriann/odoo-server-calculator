@@ -18,7 +18,7 @@ The project is a single static HTML application. It has no backend, database, np
 After enabling GitHub Pages:
 
 ```text
-https://<your-github-username>.github.io/odoo-server-sizing-calculator/
+https://dimastriann.github.io/odoo-server-sizing-calculator/
 ```
 
 ## Features
@@ -43,7 +43,7 @@ https://<your-github-username>.github.io/odoo-server-sizing-calculator/
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-github-username>/odoo-server-sizing-calculator.git
+git clone https://github.com/dimastriann/odoo-server-sizing-calculator.git
 cd odoo-server-sizing-calculator
 ```
 
