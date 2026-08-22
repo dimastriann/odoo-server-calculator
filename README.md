@@ -18,7 +18,7 @@ The project is a single static HTML application. It has no backend, database, np
 After enabling GitHub Pages:
 
 ```text
-https://dimastriann.github.io/odoo-server-calculator/
+https://<your-github-username>.github.io/odoo-server-sizing-calculator/
 ```
 
 ## Features
@@ -43,8 +43,8 @@ https://dimastriann.github.io/odoo-server-calculator/
 Clone the repository:
 
 ```bash
-git clone https://github.com/dimastriann/odoo-server-calculator.git
-cd odoo-server-calculator
+git clone https://github.com/<your-github-username>/odoo-server-sizing-calculator.git
+cd odoo-server-sizing-calculator
 ```
 
 Open `index.html` directly in your browser.
@@ -452,6 +452,38 @@ Measure current CPU/RAM
 Measured production data should take priority over generic assumptions.
 
 ---
+
+## Initial DB Size Estimator
+
+For new implementations, the calculator includes an optional helper to estimate initial PostgreSQL size from expected standard Odoo data: Contacts, Products, Sale/Purchase Orders and lines, Invoices/Bills and journal lines, Stock Pickings/Moves, and POS Orders/Lines.
+
+```text
+Estimated DB
+= Estimated Standard Odoo Record Footprint
+  × (1 + DB / Index Overhead)
+  × (1 + Migration Safety)
+```
+
+Attachments are excluded and belong in the Filestore estimate. The estimator includes an Odoo 16–19 selector, but currently uses the same conservative baseline factors across versions until version-specific coefficients can be calibrated from real standard databases. Users can apply the estimate to the DB Size input or override it manually.
+
+---
+
+
+## Rough Attachment / Filestore Growth
+
+The calculator also accepts an estimated total attachment size per month.
+
+```text
+Yearly Filestore Growth
+= Monthly Attachment Size × 12
+```
+
+This value is shown as a reference only and does not overwrite the current Filestore Size input. Attachments include uploaded PDFs, images, documents, and similar files.
+
+## Theme
+
+The page supports light and dark themes with a dependency-free inline SVG sun/moon icon. The user's theme choice is stored locally in the browser.
+
 
 ## Privacy
 
