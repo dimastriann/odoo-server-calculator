@@ -1,303 +1,60 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A lightweight Odoo server sizing calculator for CPU, RAM, workers, and storage planning.">
   <title>Odoo Server Sizing Calculator</title>
   <style>
-    :root{
-      --bg:#f5f7fb; --card:#fff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
-      --accent:#714b67; --accent-soft:#f3edf1; --ok-bg:#ecfdf5; --ok:#166534;
-      --warn-bg:#fff7ed; --warn:#9a3412; --code:#111827;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1200px;margin:0 auto;padding:32px 18px 64px}
-    h1{margin:0 0 8px;font-size:30px}
-    h2{margin:0 0 14px;font-size:18px}
-    h3{margin:22px 0 10px;font-size:16px}
-    .sub{color:var(--muted);margin-bottom:22px}
-    .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-    .tab{border:1px solid var(--line);background:#fff;color:#374151;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer}
-    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.04)}
-    .section{margin-bottom:22px}
-    .section:last-child{margin-bottom:0}
-    .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    label{display:block;font-size:12px;font-weight:800;color:#374151;margin-bottom:6px}
-    input,select{width:100%;padding:10px 11px;border:1px solid #d1d5db;border-radius:10px;background:#fff;font-size:14px}
-    input:focus,select:focus{outline:2px solid rgba(113,75,103,.18);border-color:var(--accent)}
-    .hint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
-    .result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .result{border:1px solid var(--line);border-radius:12px;padding:14px}
-    .result .k{font-size:12px;color:var(--muted)}
-    .result .v{font-size:26px;font-weight:850;margin-top:4px}
-    .formula{background:var(--code);color:#f9fafb;padding:14px;border-radius:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre-wrap;line-height:1.55}
-    .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-    th{font-size:12px;color:var(--muted)}
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-    button{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
-    .primary{background:var(--accent);color:white}
-    .secondary{background:#ede9ec;color:#3f2c39}
-    .small{font-size:12px;color:var(--muted);line-height:1.6}
-    .status{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--ok-bg);color:var(--ok);font-size:13px}
-    .mode-note{padding:12px 14px;background:#faf7f9;border:1px solid #eadfe6;border-radius:12px;color:#4b3b46;font-size:13px;margin-bottom:18px;line-height:1.5}
-    .hidden{display:none!important}
-    .explanation{margin-top:22px}
-    .explanation p,.explanation li{color:#374151;line-height:1.7;font-size:14px}
-    .formula-box{background:#fafafa;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre-wrap;line-height:1.55}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}.row,.row3,.result-grid{grid-template-columns:1fr}}
+    :root{--bg:#f5f7fb;--surface:#fff;--surface-soft:#fafafa;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--input:#fff;--accent:#714b67;--accent-soft:#f3edf1;--accent-text:#5f3d57;--success-bg:#ecfdf5;--success-text:#166534;--code-bg:#111827;--code-text:#f9fafb;--shadow:0 4px 20px rgba(0,0,0,.04)}
+    html[data-theme="dark"]{--bg:#0f1115;--surface:#171a21;--surface-soft:#1d2129;--text:#f3f4f6;--muted:#a5acb8;--line:#2c323c;--input:#11151b;--accent:#a57998;--accent-soft:#2b2029;--accent-text:#e7c8dd;--success-bg:#10271b;--success-text:#86efac;--code-bg:#0b0d11;--code-text:#f3f4f6;--shadow:0 4px 20px rgba(0,0,0,.22)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);transition:background .2s,color .2s}button,input,select{font:inherit}.page{max-width:1180px;margin:auto;padding:30px 18px 64px}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}h1,h2,h3,p{margin-top:0}h1{margin-bottom:7px;font-size:clamp(26px,4vw,32px)}h2{margin-bottom:14px;font-size:18px}h3{margin:24px 0 10px;font-size:16px}.subtitle{margin:0;color:var(--muted);line-height:1.6}.theme-toggle{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:9px;font-weight:800;cursor:pointer;width:38px;height:38px;justify-content:center}
+.theme-icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block;flex:0 0 18px}
+.theme-icon-moon{display:none}html[data-theme="dark"] .theme-icon-sun{display:none}html[data-theme="dark"] .theme-icon-moon{display:block}.theme-label{margin-left:7px}.tab{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.tab{padding:10px 16px}.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}.layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr);gap:20px;align-items:start}.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}.section+.section{margin-top:22px}.mode-note,.rough-estimate,.legend-box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-soft);color:var(--muted);line-height:1.55;font-size:13px}.mode-note{margin-bottom:18px}.field-grid-2,.field-grid-3{display:grid;gap:12px}.field-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.field-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}label{display:block;margin-bottom:6px;color:var(--text);font-size:12px;font-weight:800}input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--input);color:var(--text)}input:focus,select:focus{outline:2px solid rgba(113,75,103,.2);border-color:var(--accent)}.hint{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.45}.estimate-started{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent-text);font-size:10px;font-weight:800;vertical-align:middle}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}.btn-primary{background:var(--accent);color:#fff}.btn-secondary{background:var(--accent-soft);color:var(--accent-text)}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent-text);font-size:12px;font-weight:800}.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}.result{border:1px solid var(--line);border-radius:12px;padding:14px}.result-label{color:var(--muted);font-size:12px}.result-value{margin-top:4px;font-size:26px;font-weight:850}.status{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--success-bg);color:var(--success-text);font-size:13px}.formula{margin-top:14px;padding:14px;border-radius:12px;background:var(--code-bg);color:var(--code-text);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;line-height:1.55;overflow-x:auto}.rough-estimate{margin-top:14px}.rough-estimate strong{display:block;margin-top:5px;color:var(--text);font-size:21px}.legend-box{margin-top:12px}.legend-row{display:grid;grid-template-columns:100px 55px 1fr;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.legend-row:last-child{border-bottom:0}.legend-row b{color:var(--text)}.hidden{display:none!important}.explanation{margin-top:22px}.explanation p,.explanation li{color:var(--muted);line-height:1.7;font-size:14px}.formula-box{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;line-height:1.55}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted)}@media(max-width:900px){.layout,.field-grid-2,.field-grid-3,.results{grid-template-columns:1fr}.topbar{align-items:stretch}.theme-toggle{align-self:flex-start}}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Odoo Server Sizing Calculator</h1>
-  <div class="sub">Estimate Odoo production server capacity using either a quick Basic formula or a more configurable Advanced model.</div>
-
-  <div class="tabs">
-    <button class="tab active" id="basicTab" onclick="setMode('basic')">Basic</button>
-    <button class="tab" id="advancedTab" onclick="setMode('advanced')">Advanced</button>
-  </div>
-
-  <div class="grid">
-    <div class="card">
+<main class="page">
+  <header class="topbar"><div><h1>Odoo Server Sizing Calculator</h1><p class="subtitle">Estimate Odoo production server capacity using a quick Basic model or a configurable Advanced model.</p></div><button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch theme"><svg class="theme-icon theme-icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg><svg class="theme-icon theme-icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path></svg></button></header>
+  <nav class="tabs"><button class="tab active" id="basicTab" onclick="setMode('basic')">Basic</button><button class="tab" id="advancedTab" onclick="setMode('advanced')">Advanced</button></nav>
+  <div class="layout">
+    <section class="card">
       <div id="basicMode">
-        <div class="mode-note">
-          <strong>Basic mode:</strong> use this for a fast first estimate based on total users, concurrency, workload type, database size, and growth.
-        </div>
-
-        <div class="section">
-          <h2>1. Usage</h2>
-          <div class="row3">
-            <div>
-              <label>Total Users</label>
-              <input id="bUsers" type="number" min="1" value="100">
-            </div>
-            <div>
-              <label>Concurrency %</label>
-              <input id="bConcurrency" type="number" min="1" max="100" value="25">
-            </div>
-            <div>
-              <label>Workload</label>
-              <select id="bWorkload">
-                <option value="0.8">Light — CRM / Sales / Purchase</option>
-                <option value="1.0" selected>Normal — Inventory / mixed ERP</option>
-                <option value="1.2">Medium — Accounting</option>
-                <option value="1.3">Heavy — POS / MRP</option>
-                <option value="1.5">Very Heavy — reports / imports</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>2. Data</h2>
-          <div class="row3">
-            <div>
-              <label>Database Size (GB)</label>
-              <input id="bDb" type="number" min="0" value="50">
-            </div>
-            <div>
-              <label>Filestore Size (GB)</label>
-              <input id="bFiles" type="number" min="0" value="50">
-            </div>
-            <div>
-              <label>Annual Growth %</label>
-              <input id="bGrowth" type="number" min="0" value="50">
-            </div>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <div>
-              <label>Planning Period (Years)</label>
-              <input id="bYears" type="number" min="1" step="1" value="2">
-            </div>
-            <div>
-              <label>Storage Safety %</label>
-              <input id="bStorageSafety" type="number" min="0" value="20">
-            </div>
-          </div>
-        </div>
-
-        <div class="btns">
-          <button class="primary" onclick="calculate()">Recalculate</button>
-          <button class="secondary" onclick="resetBasic()">Reset Basic</button>
-        </div>
+        <div class="mode-note"><strong>Basic mode:</strong> a fast starting estimate using users, concurrency, workload level, and storage growth.</div>
+        <div class="section"><h2>1. Usage</h2><div class="field-grid-3">
+          <div><label>Total Users</label><input id="bUsers" type="number" min="1" value="100"></div>
+          <div><label>Concurrency %</label><input id="bConcurrency" type="number" min="1" max="100" value="25"></div>
+          <div><label>Workload Type</label><select id="bWorkload"><option value="0.8">Light</option><option value="1.0" selected>Normal</option><option value="1.2">Medium</option><option value="1.3">Heavy</option><option value="1.5">Very Heavy</option></select></div>
+        </div><div class="legend-box"><strong>Workload legend</strong><div class="legend-row"><b>Light</b><span>0.8</span><span>CRM, basic Sales, Purchase, low transaction activity</span></div><div class="legend-row"><b>Normal</b><span>1.0</span><span>Mixed ERP usage, standard Inventory and office operations</span></div><div class="legend-row"><b>Medium</b><span>1.2</span><span>Accounting, moderate reporting, more frequent transactions</span></div><div class="legend-row"><b>Heavy</b><span>1.3</span><span>POS, MRP, warehouse-heavy workflows, higher concurrency</span></div><div class="legend-row"><b>Very Heavy</b><span>1.5</span><span>Large reports/imports, intensive automation, high transaction activity</span></div></div></div>
+        <div class="section"><h2>2. Storage</h2><div class="field-grid-3">
+          <div><label>Database Size (GB) <span class="estimate-started">estimated start</span></label><input id="bDb" type="number" min="0" step="0.1" value="5"></div>
+          <div><label>Filestore Size (GB) <span class="estimate-started">estimated start</span></label><input id="bFiles" type="number" min="0" step="0.1" value="10"></div>
+          <div><label>Annual Growth %</label><input id="bGrowth" type="number" min="0" value="50"></div>
+        </div><div class="field-grid-2" style="margin-top:12px"><div><label>Planning Period (Years)</label><input id="bYears" type="number" min="1" value="2"></div><div><label>Storage Safety %</label><input id="bStorageSafety" type="number" min="0" value="20"></div></div></div>
+        <div class="section"><h2>3. Rough DB Growth Estimate</h2><div class="field-grid-2"><div><label>Estimated Transactions / Month</label><input id="bTransactions" type="number" min="0" step="100" value="10000"><div class="hint">A transaction means one business document/event, not one PostgreSQL row.</div></div><div><label>Rough Monthly DB Growth</label><div class="rough-estimate">Approximate database growth<strong id="bTransactionEstimate">0 MB / month</strong><div class="hint" id="bTransactionNote"></div></div></div></div>
+<div class="row" style="margin-top:12px">
+<div><label>Estimated Attachment Size / Month (GB)</label><input id="bAttachmentMonthly" type="number" min="0" step="0.1" value="1"><div class="hint">Total PDFs, images, documents, and other uploaded files added per month.</div></div>
+<div><label>Rough Filestore Growth</label><div class="rough-estimate">Approximate attachment growth<strong id="bAttachmentEstimate">1.0 GB / month</strong><div class="hint" id="bAttachmentNote">≈ 12.0 GB/year added to filestore.</div></div></div>
+</div></div>
+        <div class="buttons"><button class="btn btn-primary" onclick="calculate()">Recalculate</button><button class="btn btn-secondary" onclick="resetBasic()">Reset Basic</button></div>
       </div>
-
       <div id="advancedMode" class="hidden">
-        <div class="mode-note">
-          <strong>Advanced mode:</strong> use this when you want to tune worker assumptions, background jobs, RAM allocations, safety margins, and storage components manually.
-        </div>
-
-        <div class="section">
-          <h2>1. User & Workload</h2>
-          <div class="row3">
-            <div>
-              <label>Total Users</label>
-              <input id="aUsers" type="number" min="1" value="100">
-            </div>
-            <div>
-              <label>Concurrency %</label>
-              <input id="aConcurrency" type="number" min="1" max="100" value="25">
-            </div>
-            <div>
-              <label>Workload Factor</label>
-              <input id="aWf" type="number" min="0.1" step="0.1" value="1.0">
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>2. Advanced Load Factors</h2>
-          <div class="row3">
-            <div>
-              <label>Transaction Factor</label>
-              <input id="aTf" type="number" min="0.1" step="0.1" value="1.0">
-            </div>
-            <div>
-              <label>Customization Factor</label>
-              <input id="aCf" type="number" min="0.1" step="0.1" value="1.0">
-            </div>
-            <div>
-              <label>Users per Worker</label>
-              <input id="aUpw" type="number" min="1" value="6">
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>3. Background Processing</h2>
-          <div class="row3">
-            <div>
-              <label>Cron Workers</label>
-              <input id="aCron" type="number" min="0" value="2">
-            </div>
-            <div>
-              <label>Queue Worker Equivalent</label>
-              <input id="aQueue" type="number" min="0" value="0">
-            </div>
-            <div>
-              <label>CPU Headroom %</label>
-              <input id="aCpuHeadroom" type="number" min="0" value="30">
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>4. RAM Model</h2>
-          <div class="row3">
-            <div>
-              <label>Avg RAM / Worker (MB)</label>
-              <input id="aWorkerRam" type="number" min="64" value="512">
-            </div>
-            <div>
-              <label>PostgreSQL RAM (GB)</label>
-              <input id="aPgRam" type="number" min="1" value="4">
-            </div>
-            <div>
-              <label>OS + Services (GB)</label>
-              <input id="aOsRam" type="number" min="1" value="2">
-            </div>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <div>
-              <label>Extra Cache / Buffer (GB)</label>
-              <input id="aCacheRam" type="number" min="0" value="2">
-            </div>
-            <div>
-              <label>RAM Headroom %</label>
-              <input id="aRamHeadroom" type="number" min="0" value="25">
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h2>5. Storage Model</h2>
-          <div class="row3">
-            <div>
-              <label>Database Size (GB)</label>
-              <input id="aDb" type="number" min="0" value="50">
-            </div>
-            <div>
-              <label>Filestore Size (GB)</label>
-              <input id="aFiles" type="number" min="0" value="50">
-            </div>
-            <div>
-              <label>Observed Growth (GB)</label>
-              <input id="aGrowthGb" type="number" min="0" step="0.1" value="2">
-            </div>
-          </div>
-          <div class="row3" style="margin-top:12px">
-            <div>
-              <label>Growth Period</label>
-              <select id="aGrowthPeriod">
-                <option value="day" selected>Per Day</option>
-                <option value="week">Per Week</option>
-                <option value="month">Per Month</option>
-                <option value="year">Per Year</option>
-              </select>
-            </div>
-            <div>
-              <label>Planning Period (Months)</label>
-              <input id="aPlanningMonths" type="number" min="1" step="1" value="12">
-            </div>
-            <div>
-              <label>Backup Copies</label>
-              <input id="aBackupCopies" type="number" min="0" step="1" value="1">
-            </div>
-          </div>
-          <div class="row" style="margin-top:12px">
-            <div>
-              <label>WAL / Temp Reserve %</label>
-              <input id="aWalPct" type="number" min="0" value="15">
-            </div>
-            <div>
-              <label>Storage Safety %</label>
-              <input id="aStorageSafety" type="number" min="0" value="20">
-            </div>
-          </div>
-        </div>
-
-        <div class="btns">
-          <button class="primary" onclick="calculate()">Recalculate</button>
-          <button class="secondary" onclick="resetAdvanced()">Reset Advanced</button>
-        </div>
+        <div class="mode-note"><strong>Advanced mode:</strong> manually tune workload, worker, background-job, memory, and storage assumptions.</div>
+        <div class="section"><h2>1. User & Workload</h2><div class="field-grid-3"><div><label>Total Users</label><input id="aUsers" type="number" min="1" value="100"></div><div><label>Concurrency %</label><input id="aConcurrency" type="number" min="1" max="100" value="25"></div><div><label>Workload Factor</label><input id="aWf" type="number" min="0.1" step="0.1" value="1.0"></div></div><div class="field-grid-3" style="margin-top:12px"><div><label>Transaction Factor</label><input id="aTf" type="number" min="0.1" step="0.1" value="1.0"></div><div><label>Customization Factor</label><input id="aCf" type="number" min="0.1" step="0.1" value="1.0"></div><div><label>Users per Worker</label><input id="aUpw" type="number" min="1" value="6"></div></div><div class="legend-box"><strong>Workload legend</strong><div class="legend-row"><b>Light</b><span>0.8</span><span>Low transaction and reporting intensity</span></div><div class="legend-row"><b>Normal</b><span>1.0</span><span>Balanced standard ERP workload</span></div><div class="legend-row"><b>Medium</b><span>1.2</span><span>Moderately expensive operations and reports</span></div><div class="legend-row"><b>Heavy</b><span>1.3</span><span>High transaction frequency or concurrency</span></div><div class="legend-row"><b>Very Heavy</b><span>1.5</span><span>Intensive batch, reporting, import, or automation workload</span></div></div></div>
+        <div class="section"><h2>2. Background Processing</h2><div class="field-grid-3"><div><label>Cron Workers</label><input id="aCron" type="number" min="0" value="2"></div><div><label>Queue Worker Equivalent</label><input id="aQueue" type="number" min="0" value="0"></div><div><label>CPU Headroom %</label><input id="aCpuHeadroom" type="number" min="0" value="30"></div></div></div>
+        <div class="section"><h2>3. RAM Model</h2><div class="field-grid-3"><div><label>Avg RAM / Worker (MB)</label><input id="aWorkerRam" type="number" min="64" value="512"></div><div><label>PostgreSQL RAM (GB)</label><input id="aPgRam" type="number" min="1" value="4"></div><div><label>OS + Services (GB)</label><input id="aOsRam" type="number" min="1" value="2"></div></div><div class="field-grid-2" style="margin-top:12px"><div><label>Extra Cache / Buffer (GB)</label><input id="aCacheRam" type="number" min="0" value="2"></div><div><label>RAM Headroom %</label><input id="aRamHeadroom" type="number" min="0" value="25"></div></div></div>
+        <div class="section"><h2>4. Storage Model</h2><div class="field-grid-3"><div><label>Database Size (GB) <span class="estimate-started">estimated start</span></label><input id="aDb" type="number" min="0" step="0.1" value="5"></div><div><label>Filestore Size (GB) <span class="estimate-started">estimated start</span></label><input id="aFiles" type="number" min="0" step="0.1" value="10"></div><div><label>Observed Growth (GB)</label><input id="aGrowthGb" type="number" min="0" step="0.1" value="2"></div></div><div class="field-grid-3" style="margin-top:12px"><div><label>Growth Period</label><select id="aGrowthPeriod"><option value="day" selected>Per Day</option><option value="week">Per Week</option><option value="month">Per Month</option><option value="year">Per Year</option></select></div><div><label>Planning Period (Months)</label><input id="aPlanningMonths" type="number" min="1" value="12"></div><div><label>Backup Copies</label><input id="aBackupCopies" type="number" min="0" value="1"></div></div><div class="field-grid-2" style="margin-top:12px"><div><label>WAL / Temp Reserve %</label><input id="aWalPct" type="number" min="0" value="15"></div><div><label>Storage Safety %</label><input id="aStorageSafety" type="number" min="0" value="20"></div></div></div>
+        <div class="section"><h2>5. Rough DB Growth Estimate</h2><div class="field-grid-2"><div><label>Estimated Transactions / Month</label><input id="aTransactions" type="number" min="0" step="100" value="10000"><div class="hint">Reference only; it does not overwrite the DB-size input.</div></div><div><label>Rough Monthly DB Growth</label><div class="rough-estimate">Approximate database growth<strong id="aTransactionEstimate">0 MB / month</strong><div class="hint" id="aTransactionNote"></div></div></div></div>
+<div class="row" style="margin-top:12px">
+<div><label>Estimated Attachment Size / Month (GB)</label><input id="aAttachmentMonthly" type="number" min="0" step="0.1" value="1"><div class="hint">Reference only; this does not overwrite the Filestore Size field.</div></div>
+<div><label>Rough Filestore Growth</label><div class="rough-estimate">Approximate attachment growth<strong id="aAttachmentEstimate">1.0 GB / month</strong><div class="hint" id="aAttachmentNote">≈ 12.0 GB/year added to filestore.</div></div></div>
+</div></div>
+        <div class="buttons"><button class="btn btn-primary" onclick="calculate()">Recalculate</button><button class="btn btn-secondary" onclick="resetAdvanced()">Reset Advanced</button></div>
       </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <span class="pill">Recommended Spec</span>
-        <div class="result-grid" style="margin-top:14px">
-          <div class="result"><div class="k">Peak Concurrent Users</div><div class="v" id="rConcurrent">0</div></div>
-          <div class="result"><div class="k">Effective Concurrent Load</div><div class="v" id="rEcl">0</div></div>
-          <div class="result"><div class="k">HTTP Workers</div><div class="v" id="rWorkers">0</div></div>
-          <div class="result"><div class="k">Worker Equivalent</div><div class="v" id="rEquivalent">0</div></div>
-          <div class="result"><div class="k">Recommended vCPU</div><div class="v" id="rCpu">0</div></div>
-          <div class="result"><div class="k">Recommended RAM</div><div class="v" id="rRam">0 GB</div></div>
-          <div class="result"><div class="k">Recommended Storage</div><div class="v" id="rStorage">0 GB</div></div>
-          <div class="result"><div class="k">CPU Worker Capacity</div><div class="v" id="rCapacity">0</div></div>
-        </div>
-        <div class="status" id="status">Ready.</div>
-      </div>
-
-      <div class="card" style="margin-top:20px">
-        <h2>Current Calculation</h2>
-        <div class="formula" id="formula"></div>
-      </div>
-    </div>
+    </section>
+    <aside><section class="card"><span class="pill">Recommended Spec</span><div class="results"><div class="result"><div class="result-label">Peak Concurrent Users</div><div class="result-value" id="rConcurrent">0</div></div><div class="result"><div class="result-label">Effective Concurrent Load</div><div class="result-value" id="rEcl">0</div></div><div class="result"><div class="result-label">HTTP Workers</div><div class="result-value" id="rWorkers">0</div></div><div class="result"><div class="result-label">Worker Equivalent</div><div class="result-value" id="rEquivalent">0</div></div><div class="result"><div class="result-label">Recommended vCPU</div><div class="result-value" id="rCpu">0</div></div><div class="result"><div class="result-label">Recommended RAM</div><div class="result-value" id="rRam">0 GB</div></div><div class="result"><div class="result-label">Recommended Storage</div><div class="result-value" id="rStorage">0 GB</div></div><div class="result"><div class="result-label">CPU Worker Capacity</div><div class="result-value" id="rCapacity">0</div></div></div><div class="status" id="status">Ready.</div></section><section class="card" style="margin-top:20px"><h2>Current Calculation</h2><div class="formula" id="formula"></div></section></aside>
   </div>
-
-  <div class="card explanation">
-    <h2>How the calculator works</h2>
-
-    <h3>Basic formula</h3>
-    <p>Basic mode is intended for quick estimation when you only know the approximate number of users and data size.</p>
-    <div class="formula-box">Concurrent Users
+  <section class="card explanation"><h2>How the calculator works</h2><h3>Basic formula</h3><p>Basic mode is intended for a quick first estimate. The default DB size of <strong>5 GB</strong> and filestore size of <strong>10 GB</strong> are only starting estimates and should be replaced when better project data is available.</p><div class="formula-box">Concurrent Users
 = Total Users × Concurrency %
 
 Effective Concurrent Load
@@ -313,28 +70,7 @@ Minimum CPU
 ≈ (Worker Equivalent - 1) / 2
 
 Recommended CPU
-= Minimum CPU + 30% headroom
-
-RAM
-≈ Worker Equivalent × 512 MB
-  + PostgreSQL
-  + OS/services
-  + cache
-  + 25% headroom
-
-Future Data
-= (Database + Filestore)
-  × (1 + Annual Growth Rate) ^ Planning Years
-
-Storage
-≈ Future Data
-  + WAL/Temp Reserve
-  + Backup Copy
-  + Safety Margin</div>
-
-    <h3>Advanced formula</h3>
-    <p>Advanced mode expands the workload estimate so you can model heavier transaction rates, custom modules, scheduled jobs, queue jobs, memory usage, and storage requirements separately.</p>
-    <div class="formula-box">Effective Concurrent Load (ECL)
+= Minimum CPU × 1.30</div><h3>Advanced formula</h3><div class="formula-box">Effective Concurrent Load (ECL)
 = Concurrent Users
   × Workload Factor
   × Transaction Factor
@@ -346,331 +82,33 @@ HTTP Workers
 Worker Equivalent
 = HTTP Workers
   + Cron Workers
-  + Queue Worker Equivalent
+  + Queue Worker Equivalent</div><h3>Rough transaction-to-DB estimate</h3><p>This helper is intentionally simple and does not replace the database-size input. It only gives a rough monthly growth reference from estimated business transactions.</p><div class="formula-box">Base Transaction Footprint
+≈ 20 KB / business transaction
 
-Minimum CPU
-≈ (Worker Equivalent - 1) / 2
-
-Recommended CPU
-= Minimum CPU × (1 + CPU Headroom)
-
-Odoo RAM
-= Worker Equivalent × Average Worker RAM
-
-Recommended RAM
-= (Odoo RAM
-   + PostgreSQL RAM
-   + OS / Services
-   + Cache)
-  × (1 + RAM Headroom)
-
-Observed Growth Per Month
-= Growth GB converted from Day / Week / Month / Year
-
-Future Data
-= Database + Filestore
-  + (Observed Growth Per Month × Planning Months)
-
-WAL / Temp Reserve
-= Future Data × WAL Reserve %
-
-Backup Storage
-= Future Data × Backup Copies
-
-Recommended Storage
-= (Future Data
-   + WAL / Temp Reserve
-   + Backup Storage)
-  × (1 + Storage Safety)</div>
-
-    <h3>Suggested workload factors</h3>
-    <table>
-      <thead><tr><th>Workload</th><th>Suggested Factor</th><th>Notes</th></tr></thead>
-      <tbody>
-        <tr><td>CRM / Contacts</td><td>0.7</td><td>Usually low transaction complexity.</td></tr>
-        <tr><td>Sales / Purchase</td><td>0.8</td><td>Typical business document processing.</td></tr>
-        <tr><td>Basic Inventory</td><td>1.0</td><td>Balanced baseline.</td></tr>
-        <tr><td>Accounting</td><td>1.2</td><td>Reporting and large journal tables can increase DB load.</td></tr>
-        <tr><td>POS / MRP</td><td>1.3</td><td>Higher transaction frequency and concurrency.</td></tr>
-        <tr><td>Heavy Reports / Imports</td><td>1.5+</td><td>Large queries, imports, exports, and batch operations.</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Important notes</h3>
-    <p>
-      This calculator is a capacity-planning aid, not a guaranteed sizing rule. Real Odoo performance depends heavily on PostgreSQL query performance,
-      custom modules, computed fields, automated actions, cron jobs, queue jobs, POS traffic, reporting patterns, integrations, and storage latency.
-      For an existing production system, observed peak CPU, worker RSS, PostgreSQL memory, slow SQL, requests per second, queue load, and transaction volume
-      should replace generic assumptions wherever possible.
-    </p>
-  </div>
-</div>
-
+Rough Monthly DB Growth
+= Transactions / Month
+  × 20 KB
+  × Workload Factor
+  × 1.35 DB/Index Overhead</div><p>The <strong>20 KB</strong> baseline is a calculator assumption, not an official Odoo value. Real storage can be lower or significantly higher depending on document lines, journal entries, stock moves, chatter, custom fields, indexes, automation, and installed modules. Attachments belong mainly to the filestore and are not included in this rough estimate.</p><h3>Workload reference</h3><table><thead><tr><th>Level</th><th>Factor</th><th>Typical interpretation</th></tr></thead><tbody><tr><td>Light</td><td>0.8</td><td>Low transaction/reporting intensity</td></tr><tr><td>Normal</td><td>1.0</td><td>Balanced standard ERP workload</td></tr><tr><td>Medium</td><td>1.2</td><td>Moderate accounting/reporting activity</td></tr><tr><td>Heavy</td><td>1.3</td><td>High transaction or warehouse/POS/MRP activity</td></tr><tr><td>Very Heavy</td><td>1.5</td><td>Intensive reporting, imports, automation, or batch workload</td></tr></tbody></table><h3>Important notes</h3><p>This calculator is a capacity-planning aid, not an official Odoo benchmark. For an existing system, measured peak CPU, worker RSS, PostgreSQL usage, slow queries, queue load, transaction volume, database growth, and filestore growth should replace generic assumptions wherever possible.</p></section>
+</main>
 <script>
-let mode = 'basic';
-
-function n(id){ return Number(document.getElementById(id).value || 0); }
-
-function ceilStep(value, steps){
-  for(const s of steps){ if(value <= s) return s; }
-  return Math.ceil(value/8)*8;
+let mode='basic';const practicalCpu=[2,4,6,8,12,16,24,32,48,64,96,128],practicalRam=[4,8,12,16,24,32,48,64,96,128,192,256,384,512],practicalStorage=[50,100,150,200,250,300,400,500,750,1000,1500,2000,3000,4000,8000];
+function n(id){return Number(document.getElementById(id).value||0)}function ceilStep(v,steps){for(const s of steps)if(v<=s)return s;return Math.ceil(v/8)*8}function fmtStorage(gb){return gb>=1000?(gb/1000)+' TB':gb+' GB'}
+function setMode(m){mode=m;document.getElementById('basicMode').classList.toggle('hidden',m!=='basic');document.getElementById('advancedMode').classList.toggle('hidden',m!=='advanced');document.getElementById('basicTab').classList.toggle('active',m==='basic');document.getElementById('advancedTab').classList.toggle('active',m==='advanced');calculate()}
+function toggleTheme(){const html=document.documentElement,next=html.dataset.theme==='dark'?'light':'dark';html.dataset.theme=next;localStorage.setItem('odoo-sizing-theme',next);
+document.getElementById('themeToggle').setAttribute('aria-label',next==='dark'?'Switch to light mode':'Switch to dark mode')}
+function loadTheme(){const saved=localStorage.getItem('odoo-sizing-theme'),dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches,theme=saved||(dark?'dark':'light');document.documentElement.dataset.theme=theme;
+document.getElementById('themeToggle').setAttribute('aria-label',theme==='dark'?'Switch to light mode':'Switch to dark mode')}
+function updateTx(prefix,wf){const tx=n(prefix+'Transactions'),mb=tx*20*wf*1.35/1024,year=mb*12/1024;document.getElementById(prefix+'TransactionEstimate').textContent=mb>=1024?(mb/1024).toFixed(2)+' GB / month':mb.toFixed(mb>=100?0:1)+' MB / month';document.getElementById(prefix+'TransactionNote').textContent='≈ '+year.toFixed(2)+' GB/year before filestore. Rough planning reference only.'}
+function render(v){rConcurrent.textContent=v.concurrent.toFixed(1);rEcl.textContent=v.ecl.toFixed(1);rWorkers.textContent=v.httpWorkers;rEquivalent.textContent=v.workerEquivalent;rCpu.textContent=v.recCpu;rRam.textContent=v.recRam+' GB';rStorage.textContent=fmtStorage(v.recStorage);rCapacity.textContent=v.cpuCapacity+' workers';status.textContent=v.cpuCapacity>=v.workerEquivalent?'Capacity check: recommended CPU has room for the calculated worker-equivalent load.':'Warning: calculated worker-equivalent load exceeds the CPU capacity model.'}
+function updateAttachmentEstimate(prefix){
+const el=document.getElementById(prefix+'AttachmentMonthly');if(!el)return;
+const monthly=Number(el.value||0),yearly=monthly*12;
+document.getElementById(prefix+'AttachmentEstimate').textContent=monthly.toFixed(monthly>=10?0:1)+' GB / month';
+document.getElementById(prefix+'AttachmentNote').textContent='≈ '+yearly.toFixed(yearly>=100?0:1)+' GB/year added to filestore.';
 }
-
-function setMode(next){
-  mode = next;
-  document.getElementById('basicMode').classList.toggle('hidden', next !== 'basic');
-  document.getElementById('advancedMode').classList.toggle('hidden', next !== 'advanced');
-  document.getElementById('basicTab').classList.toggle('active', next === 'basic');
-  document.getElementById('advancedTab').classList.toggle('active', next === 'advanced');
-  calculate();
-}
-
-function renderResult(v){
-  document.getElementById('rConcurrent').textContent = v.concurrent.toFixed(1);
-  document.getElementById('rEcl').textContent = v.ecl.toFixed(1);
-  document.getElementById('rWorkers').textContent = v.httpWorkers;
-  document.getElementById('rEquivalent').textContent = v.workerEquivalent;
-  document.getElementById('rCpu').textContent = v.recCpu;
-  document.getElementById('rRam').textContent = v.recRam + ' GB';
-  document.getElementById('rStorage').textContent = v.recStorage >= 1000 ? (v.recStorage/1000) + ' TB' : v.recStorage + ' GB';
-  document.getElementById('rCapacity').textContent = v.cpuCapacity + ' workers';
-  document.getElementById('status').textContent =
-    v.cpuCapacity >= v.workerEquivalent
-      ? 'Capacity check: recommended CPU has room for the calculated worker-equivalent load.'
-      : 'Warning: calculated worker-equivalent load exceeds the selected CPU capacity model.';
-}
-
-function calculateBasic(){
-  const users=n('bUsers'), concurrencyPct=n('bConcurrency')/100, wf=n('bWorkload');
-  const db=n('bDb'), files=n('bFiles'), growth=n('bGrowth')/100;
-  const years=Math.max(1,n('bYears')), storageSafety=n('bStorageSafety')/100;
-
-  const concurrent=users*concurrencyPct;
-  const ecl=concurrent*wf;
-  const httpWorkers=Math.max(1,Math.ceil(ecl/6));
-  const cron=2;
-  const workerEquivalent=httpWorkers+cron;
-
-  const minCpu=Math.max(1,(workerEquivalent-1)/2);
-  const cpuWithHeadroom=minCpu*1.30;
-  const recCpu=ceilStep(cpuWithHeadroom,[2,4,6,8,12,16,24,32,48,64,96,128]);
-  const cpuCapacity=recCpu*2+1;
-
-  const workerRam=512;
-  const odooRam=(workerEquivalent*workerRam)/1024;
-  const pgRam=Math.max(2,Math.min(16,recCpu*0.75));
-  const osRam=2;
-  const cacheRam=Math.max(1,Math.min(8,Math.ceil(db/50)));
-  const baseRam=odooRam+pgRam+osRam+cacheRam;
-  const ramWithHeadroom=baseRam*1.25;
-  const recRam=ceilStep(ramWithHeadroom,[4,8,12,16,24,32,48,64,96,128,192,256,384,512]);
-
-  const currentData=db+files;
-  const futureData=currentData*Math.pow(1+growth,years);
-  const wal=Math.max(10,Math.ceil(futureData*0.15));
-  const backup=futureData;
-  const storageWithSafety=(futureData+wal+backup)*(1+storageSafety);
-  const recStorage=ceilStep(storageWithSafety,[100,150,200,250,300,400,500,750,1000,1500,2000,3000,4000,8000]);
-
-  renderResult({concurrent,ecl,httpWorkers,workerEquivalent,recCpu,recRam,recStorage,cpuCapacity});
-
-  document.getElementById('formula').textContent =
-`BASIC MODE
-
-Concurrent Users
-= ${users} × ${(concurrencyPct*100).toFixed(0)}%
-= ${concurrent.toFixed(2)}
-
-Effective Concurrent Load
-= ${concurrent.toFixed(2)} × ${wf}
-= ${ecl.toFixed(2)}
-
-HTTP Workers
-= ceil(${ecl.toFixed(2)} / 6)
-= ${httpWorkers}
-
-Worker Equivalent
-= ${httpWorkers} HTTP + 2 Cron
-= ${workerEquivalent}
-
-CPU
-≈ ((Worker Equivalent - 1) / 2) × 1.30
-≈ ${cpuWithHeadroom.toFixed(2)}
-→ ${recCpu} vCPU
-
-RAM
-≈ Odoo ${odooRam.toFixed(2)} GB
- + PostgreSQL ${pgRam.toFixed(2)} GB
- + OS ${osRam} GB
- + Cache ${cacheRam} GB
- + 25% headroom
-→ ${recRam} GB
-
-Storage
-Current Data
-= DB ${db} + Filestore ${files}
-= ${currentData.toFixed(0)} GB
-
-Future Data
-= ${currentData.toFixed(0)} × (1 + ${(growth*100).toFixed(0)}%) ^ ${years}
-= ${futureData.toFixed(0)} GB
-
-WAL/Temp Reserve
-≈ 15% of Future Data
-= ${wal.toFixed(0)} GB
-
-Backup Copy
-= ${backup.toFixed(0)} GB
-
-Safety
-= ${(storageSafety*100).toFixed(0)}%
-
-→ Recommended: ${recStorage>=1000 ? (recStorage/1000)+' TB' : recStorage+' GB'}`;
-}
-
-function calculateAdvanced(){
-  const users=n('aUsers'), concurrencyPct=n('aConcurrency')/100, wf=n('aWf'), tf=n('aTf'), cf=n('aCf'), upw=Math.max(1,n('aUpw'));
-  const cron=n('aCron'), queue=n('aQueue'), cpuHeadroom=n('aCpuHeadroom')/100;
-  const workerRam=n('aWorkerRam'), pgRam=n('aPgRam'), osRam=n('aOsRam'), cacheRam=n('aCacheRam'), ramHeadroom=n('aRamHeadroom')/100;
-  const db=n('aDb'), files=n('aFiles');
-  const growthGb=n('aGrowthGb'), growthPeriod=document.getElementById('aGrowthPeriod').value;
-  const planningMonths=Math.max(1,n('aPlanningMonths'));
-  const backupCopies=Math.max(0,n('aBackupCopies'));
-  const walPct=n('aWalPct')/100, storageSafety=n('aStorageSafety')/100;
-
-  const concurrent=users*concurrencyPct;
-  const ecl=concurrent*wf*tf*cf;
-  const httpWorkers=Math.max(1,Math.ceil(ecl/upw));
-  const workerEquivalent=httpWorkers+cron+queue;
-
-  const minCpu=Math.max(1,(workerEquivalent-1)/2);
-  const cpuWithHeadroom=minCpu*(1+cpuHeadroom);
-  const recCpu=ceilStep(cpuWithHeadroom,[2,4,6,8,12,16,24,32,48,64,96,128]);
-  const cpuCapacity=recCpu*2+1;
-
-  const odooRam=(workerEquivalent*workerRam)/1024;
-  const baseRam=odooRam+pgRam+osRam+cacheRam;
-  const ramWithHeadroom=baseRam*(1+ramHeadroom);
-  const recRam=ceilStep(ramWithHeadroom,[4,8,12,16,24,32,48,64,96,128,192,256,384,512]);
-
-  const monthlyMultiplier = growthPeriod === 'day' ? 30.4375 :
-                            growthPeriod === 'week' ? 4.345 :
-                            growthPeriod === 'month' ? 1 :
-                            1/12;
-  const monthlyGrowth=growthGb*monthlyMultiplier;
-  const currentData=db+files;
-  const addedGrowth=monthlyGrowth*planningMonths;
-  const futureData=currentData+addedGrowth;
-  const wal=futureData*walPct;
-  const backup=futureData*backupCopies;
-  const storageWithSafety=(futureData+wal+backup)*(1+storageSafety);
-  const recStorage=ceilStep(storageWithSafety,[100,150,200,250,300,400,500,750,1000,1500,2000,3000,4000,8000]);
-
-  renderResult({concurrent,ecl,httpWorkers,workerEquivalent,recCpu,recRam,recStorage,cpuCapacity});
-
-  document.getElementById('formula').textContent =
-`ADVANCED MODE
-
-Concurrent Users
-= ${users} × ${(concurrencyPct*100).toFixed(0)}%
-= ${concurrent.toFixed(2)}
-
-ECL
-= Concurrent × WF × TF × CF
-= ${concurrent.toFixed(2)} × ${wf} × ${tf} × ${cf}
-= ${ecl.toFixed(2)}
-
-HTTP Workers
-= ceil(${ecl.toFixed(2)} / ${upw})
-= ${httpWorkers}
-
-Worker Equivalent
-= ${httpWorkers} + ${cron} + ${queue}
-= ${workerEquivalent}
-
-Minimum CPU
-≈ (Worker Equivalent - 1) / 2
-= ${minCpu.toFixed(2)}
-
-CPU with Headroom
-= ${minCpu.toFixed(2)} × ${(1+cpuHeadroom).toFixed(2)}
-= ${cpuWithHeadroom.toFixed(2)}
-→ ${recCpu} vCPU
-
-Odoo RAM
-= ${workerEquivalent} × ${workerRam} MB
-= ${odooRam.toFixed(2)} GB
-
-RAM with Headroom
-= (${odooRam.toFixed(2)} + ${pgRam} + ${osRam} + ${cacheRam})
-  × ${(1+ramHeadroom).toFixed(2)}
-= ${ramWithHeadroom.toFixed(2)} GB
-→ ${recRam} GB
-
-Storage
-Current Data
-= ${db} + ${files}
-= ${currentData.toFixed(0)} GB
-
-Observed Growth
-= ${growthGb} GB / ${growthPeriod}
-≈ ${monthlyGrowth.toFixed(2)} GB / month
-
-Planning Growth
-= ${monthlyGrowth.toFixed(2)} × ${planningMonths}
-= ${addedGrowth.toFixed(0)} GB
-
-Future Data
-= ${currentData.toFixed(0)} + ${addedGrowth.toFixed(0)}
-= ${futureData.toFixed(0)} GB
-
-WAL / Temp Reserve
-= ${futureData.toFixed(0)} × ${(walPct*100).toFixed(0)}%
-= ${wal.toFixed(0)} GB
-
-Backup Storage
-= ${futureData.toFixed(0)} × ${backupCopies}
-= ${backup.toFixed(0)} GB
-
-With Safety
-= (${futureData.toFixed(0)} + ${wal.toFixed(0)} + ${backup.toFixed(0)})
-  × ${(1+storageSafety).toFixed(2)}
-= ${storageWithSafety.toFixed(0)} GB
-
-→ Recommended: ${recStorage>=1000 ? (recStorage/1000)+' TB' : recStorage+' GB'}`;
-}
-
-function calculate(){
-  if(mode === 'basic') calculateBasic();
-  else calculateAdvanced();
-}
-
-function resetBasic(){
-  document.getElementById('bUsers').value=100;
-  document.getElementById('bConcurrency').value=25;
-  document.getElementById('bWorkload').value='1.0';
-  document.getElementById('bDb').value=50;
-  document.getElementById('bFiles').value=50;
-  document.getElementById('bGrowth').value=50;
-  document.getElementById('bYears').value=2;
-  document.getElementById('bStorageSafety').value=20;
-  calculate();
-}
-
-function resetAdvanced(){
-  const values={
-    aUsers:100,aConcurrency:25,aWf:1,aTf:1,aCf:1,aUpw:6,
-    aCron:2,aQueue:0,aCpuHeadroom:30,aWorkerRam:512,aPgRam:4,
-    aOsRam:2,aCacheRam:2,aRamHeadroom:25,aDb:50,aFiles:50,
-    aGrowthGb:2,aPlanningMonths:12,aBackupCopies:1,aWalPct:15,aStorageSafety:20
-  };
-  for(const [id,v] of Object.entries(values)) document.getElementById(id).value=v;
-  document.getElementById('aGrowthPeriod').value='day';
-  calculate();
-}
-
-document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',calculate));
-calculate();
+function calculateBasic(){const users=n('bUsers'),cp=n('bConcurrency')/100,wf=n('bWorkload'),db=n('bDb'),files=n('bFiles'),growth=n('bGrowth')/100,years=Math.max(1,n('bYears')),safety=n('bStorageSafety')/100,concurrent=users*cp,ecl=concurrent*wf,httpWorkers=Math.max(1,Math.ceil(ecl/6)),cron=2,workerEquivalent=httpWorkers+cron,minCpu=Math.max(1,(workerEquivalent-1)/2),cpuWithHeadroom=minCpu*1.3,recCpu=ceilStep(cpuWithHeadroom,practicalCpu),cpuCapacity=recCpu*2+1,odooRam=workerEquivalent*.5,pgRam=Math.max(2,Math.min(16,recCpu*.75)),osRam=2,cacheRam=Math.max(1,Math.min(8,Math.ceil(db/50))),recRam=ceilStep((odooRam+pgRam+osRam+cacheRam)*1.25,practicalRam),currentData=db+files,futureData=currentData*Math.pow(1+growth,years),wal=Math.max(5,futureData*.15),backup=futureData,recStorage=ceilStep((futureData+wal+backup)*(1+safety),practicalStorage);render({concurrent,ecl,httpWorkers,workerEquivalent,recCpu,recRam,recStorage,cpuCapacity});updateTx('b',wf);formula.textContent=`BASIC MODE\n\nConcurrent Users\n= ${users} × ${(cp*100).toFixed(0)}%\n= ${concurrent.toFixed(2)}\n\nEffective Concurrent Load\n= ${concurrent.toFixed(2)} × ${wf}\n= ${ecl.toFixed(2)}\n\nHTTP Workers\n= ceil(${ecl.toFixed(2)} / 6)\n= ${httpWorkers}\n\nWorker Equivalent\n= ${httpWorkers} HTTP + ${cron} Cron\n= ${workerEquivalent}\n\nRecommended CPU\n→ ${recCpu} vCPU\n\nRecommended RAM\n→ ${recRam} GB\n\nCurrent Data\n= ${db} GB DB + ${files} GB Filestore\n= ${currentData.toFixed(1)} GB\n\nFuture Data\n= ${futureData.toFixed(1)} GB\n\nRecommended Storage\n→ ${fmtStorage(recStorage)}`}
+function calculateAdvanced(){const users=n('aUsers'),cp=n('aConcurrency')/100,wf=n('aWf'),tf=n('aTf'),cf=n('aCf'),upw=Math.max(1,n('aUpw')),cron=n('aCron'),queue=n('aQueue'),cpuHead=n('aCpuHeadroom')/100,workerRam=n('aWorkerRam'),pg=n('aPgRam'),os=n('aOsRam'),cache=n('aCacheRam'),ramHead=n('aRamHeadroom')/100,db=n('aDb'),files=n('aFiles'),growthGb=n('aGrowthGb'),period=aGrowthPeriod.value,months=Math.max(1,n('aPlanningMonths')),backups=Math.max(0,n('aBackupCopies')),walPct=n('aWalPct')/100,safety=n('aStorageSafety')/100,concurrent=users*cp,ecl=concurrent*wf*tf*cf,httpWorkers=Math.max(1,Math.ceil(ecl/upw)),workerEquivalent=httpWorkers+cron+queue,minCpu=Math.max(1,(workerEquivalent-1)/2),recCpu=ceilStep(minCpu*(1+cpuHead),practicalCpu),cpuCapacity=recCpu*2+1,odooRam=workerEquivalent*workerRam/1024,recRam=ceilStep((odooRam+pg+os+cache)*(1+ramHead),practicalRam),mult=period==='day'?30.4375:period==='week'?4.345:period==='month'?1:1/12,monthlyGrowth=growthGb*mult,currentData=db+files,added=monthlyGrowth*months,futureData=currentData+added,wal=futureData*walPct,backup=futureData*backups,recStorage=ceilStep((futureData+wal+backup)*(1+safety),practicalStorage);render({concurrent,ecl,httpWorkers,workerEquivalent,recCpu,recRam,recStorage,cpuCapacity});updateTx('a',wf);formula.textContent=`ADVANCED MODE\n\nConcurrent Users\n= ${users} × ${(cp*100).toFixed(0)}%\n= ${concurrent.toFixed(2)}\n\nECL\n= ${concurrent.toFixed(2)} × ${wf} × ${tf} × ${cf}\n= ${ecl.toFixed(2)}\n\nHTTP Workers\n= ${httpWorkers}\n\nWorker Equivalent\n= ${workerEquivalent}\n\nRecommended CPU\n→ ${recCpu} vCPU\n\nRecommended RAM\n→ ${recRam} GB\n\nObserved Growth\n≈ ${monthlyGrowth.toFixed(2)} GB / month\n\nFuture Data\n= ${futureData.toFixed(1)} GB\n\nRecommended Storage\n→ ${fmtStorage(recStorage)}`}
+function calculate(){mode==='basic'?calculateBasic():calculateAdvanced()}function resetBasic(){bUsers.value=100;bConcurrency.value=25;bWorkload.value='1.0';bDb.value=5;bFiles.value=10;bGrowth.value=50;bYears.value=2;bStorageSafety.value=20;bTransactions.value=10000;calculate()}function resetAdvanced(){const d={aUsers:100,aConcurrency:25,aWf:1,aTf:1,aCf:1,aUpw:6,aCron:2,aQueue:0,aCpuHeadroom:30,aWorkerRam:512,aPgRam:4,aOsRam:2,aCacheRam:2,aRamHeadroom:25,aDb:5,aFiles:10,aGrowthGb:2,aPlanningMonths:12,aBackupCopies:1,aWalPct:15,aStorageSafety:20,aTransactions:10000};for(const[k,v]of Object.entries(d))document.getElementById(k).value=v;aGrowthPeriod.value='day';calculate()}document.querySelectorAll('input,select').forEach(el=>{el.addEventListener('input',calculate);el.addEventListener('change',calculate)});loadTheme();calculate();
 </script>
-</body>
-</html>
+</body></html>
