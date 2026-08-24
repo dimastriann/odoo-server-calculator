@@ -18,7 +18,7 @@ The project is a single static HTML application. It has no backend, database, np
 After enabling GitHub Pages:
 
 ```text
-https://dimastriann.github.io/odoo-server-sizing-calculator/
+https://<your-github-dimastriann>.github.io/odoo-server-calculator/
 ```
 
 ## Features
@@ -43,8 +43,8 @@ https://dimastriann.github.io/odoo-server-sizing-calculator/
 Clone the repository:
 
 ```bash
-git clone https://github.com/dimastriann/odoo-server-sizing-calculator.git
-cd odoo-server-sizing-calculator
+git clone https://github.com/<your-github-dimastriann>/odoo-server-calculator.git
+cd odoo-server-calculator
 ```
 
 Open `index.html` directly in your browser.
@@ -485,6 +485,35 @@ This value is shown as a reference only and does not overwrite the current Files
 The page supports light and dark themes with a dependency-free inline SVG sun/moon icon. The user's theme choice is stored locally in the browser.
 
 
+
+## Separate PostgreSQL Server
+
+The calculator includes an optional **Separate PostgreSQL Server** toggle.
+
+- **Off:** Odoo and PostgreSQL are sized as one combined server.
+- **On:** results are split into an Odoo Application Server and a PostgreSQL Server.
+
+The application server is sized mainly from workers, CPU, and Odoo/Python memory. The PostgreSQL server uses a separate planning heuristic based on database size, workload, concurrent users, and storage.
+
+The displayed `shared_buffers` starting point is 25% of recommended PostgreSQL-server RAM. The PostgreSQL RAM/CPU recommendation is a calculator heuristic and should be replaced by measured production data when available.
+
+
+## Project Structure
+
+```text
+odoo-server-calculator/
+├── index.html
+├── css/
+│   └── style.css
+├── js/
+│   └── app.js
+├── README.md
+├── LICENSE
+└── .gitignore
+```
+
+The project is plain HTML, CSS, and JavaScript with no build step or runtime dependency.
+
 ## Privacy
 
 All calculations happen locally in the browser.
@@ -518,6 +547,36 @@ It cannot automatically account for:
 - differences in deployment architecture
 
 Always validate important production deployments with monitoring and load testing.
+
+---
+
+## Contributing
+
+Contributions are welcome.
+
+Possible improvements include:
+
+- multiple user-group modelling
+- additional workload profiles
+- PostgreSQL sizing guidance
+- deployment architecture options
+- import/export of sizing scenarios
+- benchmark-based presets
+- current-vs-future infrastructure comparison
+- charts and capacity visualizations
+- additional documentation and examples
+
+Typical workflow:
+
+```bash
+git checkout -b feature/my-improvement
+# make changes
+git add .
+git commit -m "Add my improvement"
+git push origin feature/my-improvement
+```
+
+Then open a pull request.
 
 ---
 
