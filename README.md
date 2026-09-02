@@ -130,6 +130,8 @@ Recommended RAM
 
 The worker-memory mix and six-concurrent-users-per-worker rule follow Odoo's deployment guide. The PostgreSQL, OS, cache, and 15% headroom values are calculator planning assumptions for a combined server. The raw result is rounded upward to a practical server-memory tier.
 
+`HTTP Workers` is the recommended Odoo `workers` value. `Worker Equivalent` additionally includes cron and queue processing for CPU/RAM sizing. The CPU capacity check is only a validation ceiling derived from `(vCPU × 2) + 1`; it is not a recommendation to configure that many workers.
+
 ### Basic Storage Formula
 
 ```text

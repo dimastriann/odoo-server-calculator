@@ -68,10 +68,11 @@ function render(v){
   rCpu.textContent=v.recCpu;
   rRam.textContent=v.recRam+' GB';
   rStorage.textContent=fmtStorage(v.recStorage);
-  rCapacity.textContent=v.cpuCapacity+' workers';
-  status.textContent=v.cpuCapacity>=v.workerEquivalent
-    ?'Capacity check: recommended CPU has room for the calculated worker-equivalent load.'
-    :'Warning: calculated worker-equivalent load exceeds the CPU capacity model.';
+  const hasCpuCapacity=v.cpuCapacity>=v.workerEquivalent;
+  rCapacity.textContent=hasCpuCapacity?'Pass':'Review';
+  status.textContent=hasCpuCapacity
+    ?`Capacity check: ${v.workerEquivalent} worker-equivalent needed; ${v.cpuCapacity} is the theoretical ceiling for ${v.recCpu} vCPU.`
+    :`Warning: ${v.workerEquivalent} worker-equivalent needed, above the ${v.cpuCapacity} theoretical ceiling for ${v.recCpu} vCPU.`;
 }
 
 function recommendDbRam(dbSizeGb,wf,concurrent){
