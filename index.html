@@ -49,8 +49,8 @@
       <div id="advancedMode" class="hidden">
         <div class="mode-note"><strong>Advanced mode:</strong> manually tune workload, worker, background-job, memory, and storage assumptions.</div>
         <div class="section"><h2>1. User & Workload</h2><div class="field-grid-3"><div><label>Total Users</label><input id="aUsers" type="number" min="1" value="100"></div><div><label>Concurrency %</label><input id="aConcurrency" type="number" min="1" max="100" value="25"></div><div><label>Workload Factor</label><input id="aWf" type="number" min="0.1" step="0.1" value="1.0"></div></div><div class="field-grid-3" style="margin-top:12px"><div><label>Transaction Factor</label><input id="aTf" type="number" min="0.1" step="0.1" value="1.0"></div><div><label>Customization Factor</label><input id="aCf" type="number" min="0.1" step="0.1" value="1.0"></div><div><label>Users per Worker</label><input id="aUpw" type="number" min="1" value="6"></div></div><div class="legend-box"><strong>Workload legend</strong><div class="legend-row"><b>Light</b><span>0.8</span><span>Low transaction and reporting intensity</span></div><div class="legend-row"><b>Normal</b><span>1.0</span><span>Balanced standard ERP workload</span></div><div class="legend-row"><b>Medium</b><span>1.2</span><span>Moderately expensive operations and reports</span></div><div class="legend-row"><b>Heavy</b><span>1.3</span><span>High transaction frequency or concurrency</span></div><div class="legend-row"><b>Very Heavy</b><span>1.5</span><span>Intensive batch, reporting, import, or automation workload</span></div></div></div>
-        <div class="section"><h2>2. Background Processing</h2><div class="field-grid-3"><div><label>Cron Workers</label><input id="aCron" type="number" min="0" value="2"></div><div><label>Queue Worker Equivalent</label><input id="aQueue" type="number" min="0" value="0"></div><div><label>CPU Headroom %</label><input id="aCpuHeadroom" type="number" min="0" value="30"></div></div></div>
-        <div class="section"><h2>3. RAM Model</h2><div class="field-grid-3"><div><label>Avg RAM / Worker (MB)</label><input id="aWorkerRam" type="number" min="64" value="512"></div><div><label>PostgreSQL RAM (GB)</label><input id="aPgRam" type="number" min="1" value="4"></div><div><label>OS + Services (GB)</label><input id="aOsRam" type="number" min="1" value="2"></div></div><div class="field-grid-2" style="margin-top:12px"><div><label>Extra Cache / Buffer (GB)</label><input id="aCacheRam" type="number" min="0" value="2"></div><div><label>RAM Headroom %</label><input id="aRamHeadroom" type="number" min="0" value="25"></div></div></div>
+        <div class="section"><h2>2. Background Processing</h2><div class="field-grid-3"><div><label>Cron Workers</label><input id="aCron" type="number" min="0" value="1"></div><div><label>Queue Worker Equivalent</label><input id="aQueue" type="number" min="0" value="0"></div><div><label>CPU Headroom %</label><input id="aCpuHeadroom" type="number" min="0" value="30"></div></div></div>
+        <div class="section"><h2>3. RAM Model</h2><div class="field-grid-3"><div><label>Avg RAM / Worker (MB)</label><input id="aWorkerRam" type="number" min="64" value="325"><div class="hint">Odoo guide baseline: 80% light at 150 MB and 20% heavy at 1 GB.</div></div><div><label>PostgreSQL RAM (GB)</label><input id="aPgRam" type="number" min="1" step="0.5" value="1"></div><div><label>OS + Services (GB)</label><input id="aOsRam" type="number" min="1" step="0.5" value="1"></div></div><div class="field-grid-2" style="margin-top:12px"><div><label>Extra Cache / Buffer (GB)</label><input id="aCacheRam" type="number" min="0" step="0.5" value="0.5"></div><div><label>RAM Headroom %</label><input id="aRamHeadroom" type="number" min="0" value="15"></div></div></div>
         <div class="section"><h2>4. Storage Model</h2><div class="field-grid-3"><div><label>Database Size (GB) <span class="estimate-started">estimated start</span></label><input id="aDb" type="number" min="0" step="0.1" value="5"></div><div><label>Filestore Size (GB) <span class="estimate-started">estimated start</span></label><input id="aFiles" type="number" min="0" step="0.1" value="10"></div><div><label>Observed Growth (GB)</label><input id="aGrowthGb" type="number" min="0" step="0.1" value="2"></div></div><div class="field-grid-3" style="margin-top:12px"><div><label>Growth Period</label><select id="aGrowthPeriod"><option value="day" selected>Per Day</option><option value="week">Per Week</option><option value="month">Per Month</option><option value="year">Per Year</option></select></div><div><label>Planning Period (Months)</label><input id="aPlanningMonths" type="number" min="1" value="12"></div><div><label>Backup Copies</label><input id="aBackupCopies" type="number" min="0" value="1"></div></div><div class="field-grid-2" style="margin-top:12px"><div><label>WAL / Temp Reserve %</label><input id="aWalPct" type="number" min="0" value="15"></div><div><label>Storage Safety %</label><input id="aStorageSafety" type="number" min="0" value="20"></div></div></div>
         <div class="section"><h2>5. Rough DB Growth Estimate</h2><div class="field-grid-2"><div><label>Estimated Transactions / Month</label><input id="aTransactions" type="number" min="0" step="100" value="10000"><div class="hint">Reference only; it does not overwrite the DB-size input.</div></div><div><label>Rough Monthly DB Growth</label><div class="rough-estimate">Approximate database growth<strong id="aTransactionEstimate">0 MB / month</strong><div class="hint" id="aTransactionNote"></div></div></div></div>
 <div class="row" style="margin-top:12px">
@@ -107,13 +107,18 @@ HTTP Workers
 = ceil(Effective Concurrent Load / 6)
 
 Worker Equivalent
-= HTTP Workers + 2 Cron Workers
+= HTTP Workers + 1 Cron Worker
 
 Minimum CPU
 ≈ (Worker Equivalent - 1) / 2
 
 Recommended CPU
-= Minimum CPU × 1.30</div><h3>Advanced formula</h3><div class="formula-box">Effective Concurrent Load (ECL)
+= Minimum CPU × 1.30
+
+Odoo worker RAM
+≈ Worker Equivalent × 325 MB
+
+Combined-server RAM also reserves memory for PostgreSQL, the OS, and cache, adds 15% headroom, then rounds up to a server tier.</div><h3>Advanced formula</h3><div class="formula-box">Effective Concurrent Load (ECL)
 = Concurrent Users
   × Workload Factor
   × Transaction Factor
@@ -145,12 +150,12 @@ The Odoo side is sized mainly from workers, CPU, and Python memory. The PostgreS
 
 PostgreSQL Server RAM
 = DB-size preset
-  adjusted by workload
+  stepped up by effective concurrent load
 
 shared_buffers starting point
 ≈ PostgreSQL Server RAM × 25%</div>
 <p>
-The PostgreSQL sizing preset is a calculator heuristic, not an official PostgreSQL formula. For existing systems, measured working set,
+The PostgreSQL sizing preset starts at 4 GB RAM and 2 vCPU for a database up to 20 GB with low effective concurrent load. It is a calculator heuristic, not an official PostgreSQL formula. For existing systems, measured working set,
 cache hit ratio, query concurrency, connection count, and storage IOPS should take priority. Keep both servers on a low-latency private network.
 </p>
 

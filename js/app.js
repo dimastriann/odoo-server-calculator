@@ -2,6 +2,7 @@ let mode='basic';
 const practicalCpu=[2,4,6,8,12,16,24,32,48,64,96,128];
 const practicalRam=[4,8,12,16,24,32,48,64,96,128,192,256,384,512];
 const practicalStorage=[50,100,150,200,250,300,400,500,750,1000,1500,2000,3000,4000,8000];
+const officialAverageWorkerRamGb=(.8*150+.2*1024)/1024;
 
 function n(id){return Number(document.getElementById(id).value||0)}
 function ceilStep(value,steps){for(const s of steps){if(value<=s)return s}return Math.ceil(value/8)*8}
@@ -73,23 +74,30 @@ function render(v){
     :'Warning: calculated worker-equivalent load exceeds the CPU capacity model.';
 }
 
-function recommendDbRam(dbSizeGb,wf){
-  let base;
-  if(dbSizeGb<=20)base=8;
-  else if(dbSizeGb<=100)base=16;
-  else if(dbSizeGb<=300)base=32;
-  else if(dbSizeGb<=700)base=64;
-  else base=96;
-  return ceilStep(base*Math.max(1,wf),practicalRam);
+function recommendDbRam(dbSizeGb,wf,concurrent){
+  const effectiveLoad=concurrent*wf;
+  let tierIndex;
+  if(dbSizeGb<=20)tierIndex=0;
+  else if(dbSizeGb<=100)tierIndex=1;
+  else if(dbSizeGb<=300)tierIndex=3;
+  else if(dbSizeGb<=700)tierIndex=5;
+  else tierIndex=6;
+
+  // Move through practical RAM tiers only when concurrent database pressure
+  // is meaningful. A workload label alone should not double a tiny DB server.
+  if(effectiveLoad>30)tierIndex++;
+  if(effectiveLoad>60)tierIndex++;
+  if(effectiveLoad>120)tierIndex++;
+  return practicalRam[Math.min(tierIndex,practicalRam.length-1)];
 }
 
-function recommendDbCpu(wf,concurrent){
-  let cpu=4;
-  if(concurrent>30)cpu=6;
-  if(concurrent>60)cpu=8;
-  if(concurrent>120)cpu=12;
-  if(wf>=1.3)cpu*=1.25;
-  return ceilStep(cpu,practicalCpu);
+function recommendDbCpu(wf,concurrent,dbSizeGb){
+  const effectiveLoad=concurrent*wf;
+  let cpu=2;
+  if(effectiveLoad>30||dbSizeGb>100)cpu=4;
+  if(effectiveLoad>60||dbSizeGb>300)cpu=6;
+  if(effectiveLoad>120||dbSizeGb>700)cpu=8;
+  return cpu;
 }
 
 function renderSplit(v){
@@ -116,18 +124,23 @@ function calculateBasic(){
   const concurrent=users*cp;
   const ecl=concurrent*wf;
   const httpWorkers=Math.max(1,Math.ceil(ecl/6));
-  const cron=2;
+  const cron=1;
   const workerEquivalent=httpWorkers+cron;
 
   const minCpu=Math.max(1,(workerEquivalent-1)/2);
   const recCpu=ceilStep(minCpu*1.3,practicalCpu);
   const cpuCapacity=recCpu*2+1;
 
-  const odooRam=workerEquivalent*.5;
-  const pgRam=Math.max(2,Math.min(16,recCpu*.75));
-  const osRam=2;
-  const cacheRam=Math.max(1,Math.min(8,Math.ceil(db/50)));
-  const recRam=ceilStep((odooRam+pgRam+osRam+cacheRam)*1.25,practicalRam);
+  // Odoo's deployment guide models 80% light workers at 150 MB and
+  // 20% heavy workers at 1 GB. PostgreSQL/OS/cache are modest starting
+  // reserves for a combined small server and grow with CPU/database size.
+  const odooRam=workerEquivalent*officialAverageWorkerRamGb;
+  const pgRam=Math.max(1,Math.min(12,recCpu*.5));
+  const osRam=1;
+  const cacheRam=Math.max(.5,Math.min(4,Math.ceil(db/100)*.5));
+  const ramHeadroom=.15;
+  const rawRam=(odooRam+pgRam+osRam+cacheRam)*(1+ramHeadroom);
+  const recRam=ceilStep(rawRam,practicalRam);
 
   const currentData=db+files;
   const futureData=currentData*Math.pow(1+growth,years);
@@ -142,8 +155,8 @@ function calculateBasic(){
   const appCpu=recCpu;
   const appStorage=ceilStep(Math.max(30,20+files*.10),practicalStorage);
 
-  const dbRam=recommendDbRam(db,wf);
-  const dbCpu=recommendDbCpu(wf,concurrent);
+  const dbRam=recommendDbRam(db,wf,concurrent);
+  const dbCpu=recommendDbCpu(wf,concurrent,db);
   const dbStorage=ceilStep((futureData+wal+backup)*(1+safety),practicalStorage);
 
   renderSplit({appCpu,appRam,httpWorkers,appStorage,dbCpu,dbRam,dbStorage});
@@ -208,7 +221,8 @@ Recommended CPU
 → ${recCpu} vCPU
 
 Recommended RAM
-→ ${recRam} GB
+Raw estimate → ${rawRam.toFixed(2)} GB
+Server tier → ${recRam} GB
 
 Current Data
 = ${currentData.toFixed(1)} GB
@@ -257,7 +271,8 @@ function calculateAdvanced(){
   const cpuCapacity=recCpu*2+1;
 
   const odooRam=workerEquivalent*workerRam/1024;
-  const recRam=ceilStep((odooRam+pg+os+cache)*(1+ramHead),practicalRam);
+  const rawRam=(odooRam+pg+os+cache)*(1+ramHead);
+  const recRam=ceilStep(rawRam,practicalRam);
 
   const mult=period==='day'?30.4375:period==='week'?4.345:period==='month'?1:1/12;
   const monthlyGrowth=growthGb*mult;
@@ -275,8 +290,8 @@ function calculateAdvanced(){
   const appCpu=recCpu;
   const appStorage=ceilStep(Math.max(30,20+files*.10),practicalStorage);
 
-  const dbRam=recommendDbRam(db,wf);
-  const dbCpu=recommendDbCpu(wf,concurrent);
+  const dbRam=recommendDbRam(db,wf,concurrent);
+  const dbCpu=recommendDbCpu(wf,concurrent,db);
   const dbStorage=ceilStep((futureData+wal+backup)*(1+safety),practicalStorage);
 
   renderSplit({appCpu,appRam,httpWorkers,appStorage,dbCpu,dbRam,dbStorage});
@@ -350,7 +365,8 @@ Recommended CPU
 → ${recCpu} vCPU
 
 Recommended RAM
-→ ${recRam} GB
+Raw estimate → ${rawRam.toFixed(2)} GB
+Server tier → ${recRam} GB
 
 Observed Growth
 ≈ ${monthlyGrowth.toFixed(2)} GB / month
@@ -383,8 +399,8 @@ function resetBasic(){
 function resetAdvanced(){
   const d={
     aUsers:100,aConcurrency:25,aWf:1,aTf:1,aCf:1,aUpw:6,
-    aCron:2,aQueue:0,aCpuHeadroom:30,aWorkerRam:512,aPgRam:4,
-    aOsRam:2,aCacheRam:2,aRamHeadroom:25,aDb:5,aFiles:10,
+    aCron:1,aQueue:0,aCpuHeadroom:30,aWorkerRam:325,aPgRam:1,
+    aOsRam:1,aCacheRam:.5,aRamHeadroom:15,aDb:5,aFiles:10,
     aGrowthGb:2,aPlanningMonths:12,aBackupCopies:1,aWalPct:15,
     aStorageSafety:20,aTransactions:10000,aAttachmentMonthly:1
   };

@@ -107,7 +107,7 @@ HTTP Workers
 = ceil(Effective Concurrent Load / 6)
 
 Worker Equivalent
-= HTTP Workers + 2 Cron Workers
+= HTTP Workers + 1 Cron Worker
 
 Minimum CPU
 ≈ (Worker Equivalent - 1) / 2
@@ -116,15 +116,19 @@ Recommended CPU
 = Minimum CPU × 1.30
 
 Odoo RAM
-≈ Worker Equivalent × 512 MB
+≈ Worker Equivalent × 325 MB
+
+325 MB ≈ (80% × 150 MB) + (20% × 1 GB)
 
 Recommended RAM
 ≈ (Odoo RAM
    + PostgreSQL RAM
    + OS / Services
    + Cache)
-  × 1.25
+  × 1.15
 ```
+
+The worker-memory mix and six-concurrent-users-per-worker rule follow Odoo's deployment guide. The PostgreSQL, OS, cache, and 15% headroom values are calculator planning assumptions for a combined server. The raw result is rounded upward to a practical server-memory tier.
 
 ### Basic Storage Formula
 
@@ -493,7 +497,7 @@ The calculator includes an optional **Separate PostgreSQL Server** toggle.
 - **Off:** Odoo and PostgreSQL are sized as one combined server.
 - **On:** results are split into an Odoo Application Server and a PostgreSQL Server.
 
-The application server is sized mainly from workers, CPU, and Odoo/Python memory. The PostgreSQL server uses a separate planning heuristic based on database size, workload, concurrent users, and storage.
+The application server is sized mainly from workers, CPU, and Odoo/Python memory. The PostgreSQL server uses a separate planning heuristic based on database size and effective concurrent load. A database up to 20 GB with low effective load starts at 4 GB RAM and 2 vCPU; RAM and CPU move through larger tiers as database size or effective load increases.
 
 The displayed `shared_buffers` starting point is 25% of recommended PostgreSQL-server RAM. The PostgreSQL RAM/CPU recommendation is a calculator heuristic and should be replaced by measured production data when available.
 
